@@ -87,10 +87,7 @@ uint16_t rStep;
 uint8_t spiResistance[2];
 
 // Interupt Variables
-volatile int8_t x = 0;
-volatile uint16_t pin = 0x0001;
-uint8_t state = 0;
-uint8_t limitDuration = 1;
+uint16_t gpioPin = GPIO_PIN_13;
 
 // I2C Variables
 uint8_t i2cData[2];
@@ -105,7 +102,11 @@ int16_t acc_x, acc_y, acc_z, acc_total_vector;
 //float angle_pitch_output,angle_roll_output;
 
 // Stimulation
-uint8_t enableStimulation = 0;
+uint8_t enableStim = 2;
+volatile int8_t x = 0;
+volatile uint16_t stimPin = 0x0001;
+uint16_t state = 0x0001;
+uint8_t limitDuration = 1;
 
 int main(void)
 {
@@ -170,30 +171,42 @@ int main(void)
   while (1)
   {
 
-  /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-  // SPI Packaging
-  spiResistance[0] = rStep>>8;
-  spiResistance[1] = rStep;
-  // Package checking
-  spiResistance[0] = (spiResistance[0]&spiCheck[0])|spiWrite[0];
-  spiResistance[1] = (spiResistance[1]&spiCheck[1])|spiWrite[1];
-  // SPI Change Digipot value
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-  HAL_SPI_Transmit(&hspi1, spiResistance, 2, 50);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-  HAL_Delay(50);
+    // SPI Packaging
+    spiResistance[0] = rStep>>8;
+    spiResistance[1] = rStep;
+    // Package checking
+    spiResistance[0] = (spiResistance[0]&spiCheck[0])|spiWrite[0];
+    spiResistance[1] = (spiResistance[1]&spiCheck[1])|spiWrite[1];
+    // SPI Change Digipot value
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+    HAL_SPI_Transmit(&hspi1, spiResistance, 2, 50);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+    HAL_Delay(50);
 
 
-  // I2C Read acceleration
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
-  read_MPU_6050_data();
-  HAL_Delay(50);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+    // I2C Read acceleration
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+    read_MPU_6050_data();
+    HAL_Delay(50);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
 
-  
-  /* USER CODE BEGIN 3 */
-  HAL_Delay(1000);
+    //HAL_Delay(1000);
+    /* USER CODE BEGIN 3 */
+    
+    if(state == 1)
+    {
+      HAL_GPIO_WritePin(GPIOD, gpioPin, GPIO_PIN_SET);
+    }
+    if(state == 2)
+    {
+      HAL_GPIO_WritePin(GPIOD, gpioPin, GPIO_PIN_RESET);
+    }
+    HAL_GPIO_WritePin(GPIOD, 0x1000, GPIO_PIN_SET);
+    HAL_Delay(50);
+    HAL_GPIO_WritePin(GPIOD, 0x1000, GPIO_PIN_RESET);
+    HAL_Delay(50);
   }
   /* USER CODE END 3 */
 
@@ -236,16 +249,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_SET);
       state=0;
     }*/
-    if(enableStimulation==1)
+    /*if(enableStim==1)
     {
-      HAL_GPIO_WritePin(GPIOD, pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);
       x=0;
       while(x<limitDuration) x++;
       x=1;x=2;x=3;x=4;
-      HAL_GPIO_WritePin(GPIOD, pin, GPIO_PIN_RESET);
-      pin = pin << 1;
-      if(pin == 0x0000) pin = 0x0001;
-    }
+      HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET);
+      stimPin = stimPin << 1;
+      if(stimPin == 0x0000) stimPin = 0x0001;
+    }*/
   }
 }
 
@@ -426,13 +439,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
   /*Configure GPIO pins : PD8 PD9 PD10 PD11 
                            PD12 PD13 PD14 PD15 
                            PD0 PD1 PD2 PD3 
@@ -452,6 +458,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
@@ -467,14 +480,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(GPIO_Pin);
-  /* NOTE: This function Should not be modified, when the callback is needed,
-           the HAL_GPIO_EXTI_Callback could be implemented in the user file
-   */
-}
+
 /* USER CODE END 4 */
 
 /**
