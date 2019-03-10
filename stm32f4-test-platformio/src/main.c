@@ -172,7 +172,7 @@ int main(void)
   {
 
     /* USER CODE END WHILE */
-
+    /*
     // SPI Packaging
     spiResistance[0] = rStep>>8;
     spiResistance[1] = rStep;
@@ -190,7 +190,7 @@ int main(void)
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
     read_MPU_6050_data();
     HAL_Delay(50);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);*/
 
     //HAL_Delay(1000);
     /* USER CODE BEGIN 3 */

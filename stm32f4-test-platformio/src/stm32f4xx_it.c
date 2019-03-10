@@ -205,15 +205,16 @@ void EXTI0_IRQHandler(void)
   {
     if(state == 1) state = 2;
     else if(state == 2) state = 1;
-    //gpioPin = gpioPin << 1;
-    /*if(gpioPin == 0x2000) gpioPin = 0x4000;
-    else if(gpioPin == 0x4000) gpioPin = 0x8000;
-    else if(gpioPin == 0x8000) gpioPin = 0x2000;*/
   }
   /* USER CODE END EXTI0_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
-
+  for(uint32_t i=0; i<16777215; i++);
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
+  {
+    if(state == 1) state = 2;
+    else if(state == 2) state = 1;
+  }
   /* USER CODE END EXTI0_IRQn 1 */
 }
 
