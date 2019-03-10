@@ -39,6 +39,11 @@
 extern uint16_t gpioPin;
 extern uint8_t enableStim;
 extern uint16_t state;
+
+extern uint8_t modeNumber;
+extern uint8_t lightNumber[3];
+extern uint8_t stepExper;
+extern uint8_t spiSent;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -200,21 +205,23 @@ void SysTick_Handler(void)
 void EXTI0_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI0_IRQn 0 */
-  for(uint32_t i=0; i<16777215; i++);
-  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
+  for(uint16_t i=0; i<65535; i++);
+  // Mode button
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) && enableStim == 0)
   {
     if(state == 1) state = 2;
     else if(state == 2) state = 1;
+
+    //modeNumber++;
+    //modeNumber %= 3;
+
+    if(lightNumber[modeNumber] > 0)
+      lightNumber[modeNumber]--;
   }
   /* USER CODE END EXTI0_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
-  for(uint32_t i=0; i<16777215; i++);
-  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
-  {
-    if(state == 1) state = 2;
-    else if(state == 2) state = 1;
-  }
+  
   /* USER CODE END EXTI0_IRQn 1 */
 }
 
@@ -224,7 +231,15 @@ void EXTI0_IRQHandler(void)
 void EXTI1_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI1_IRQn 0 */
-
+  for(uint16_t i=0; i<65535; i++);  
+  // Left button
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) && enableStim == 0)
+  {
+    //if(lightNumber[modeNumber] > 0)
+    //lightNumber[modeNumber]--;
+    if(lightNumber[modeNumber] < stepExper-1)
+      lightNumber[modeNumber]++;
+  }
   /* USER CODE END EXTI1_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
   /* USER CODE BEGIN EXTI1_IRQn 1 */
@@ -238,7 +253,13 @@ void EXTI1_IRQHandler(void)
 void EXTI2_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI2_IRQn 0 */
-
+  for(uint16_t i=0; i<65535; i++);
+  // Right button
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2) && enableStim == 0)
+  {
+    if(lightNumber[modeNumber] < stepExper-1)
+      lightNumber[modeNumber]++;
+  }
   /* USER CODE END EXTI2_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
   /* USER CODE BEGIN EXTI2_IRQn 1 */
@@ -252,7 +273,13 @@ void EXTI2_IRQHandler(void)
 void EXTI3_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI3_IRQn 0 */
-
+  for(uint16_t i=0; i<65535; i++);
+  // Stimulation button
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3))
+  {
+    if(enableStim == 0) {enableStim = 1;}
+    else if(enableStim == 1) {enableStim = 0; spiSent = 0;}
+  }
   /* USER CODE END EXTI3_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
   /* USER CODE BEGIN EXTI3_IRQn 1 */

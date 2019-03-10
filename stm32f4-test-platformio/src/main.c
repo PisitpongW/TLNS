@@ -41,7 +41,7 @@
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -64,7 +64,13 @@ static void MX_I2C1_Init(void);
 static void MX_TIM1_Init(void);
 
 /* USER CODE BEGIN PFP */
-void read_MPU_6050_data();
+void read_MPU_6050_data(void);
+void display_mode(void);
+void display_light(void);
+void spi_send(void);
+void digipot_registration(void);
+void MPU_6050_registragion(void);
+
 /* Private function prototypes -----------------------------------------------*/
 
 /* USER CODE END PFP */
@@ -85,9 +91,11 @@ uint8_t spiCheck[] = {0x03,0xFF};
 uint8_t spiWrite[] = {0x04,0x00};
 uint16_t rStep;
 uint8_t spiResistance[2];
+uint16_t rDigipot[10] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
+uint8_t spiSent = 0;
 
 // Interupt Variables
-uint16_t gpioPin = GPIO_PIN_13;
+uint16_t gpioPin = GPIO_PIN_12;
 
 // I2C Variables
 uint8_t i2cData[2];
@@ -102,11 +110,18 @@ int16_t acc_x, acc_y, acc_z, acc_total_vector;
 //float angle_pitch_output,angle_roll_output;
 
 // Stimulation
-uint8_t enableStim = 2;
+uint8_t enableStim = 0;
 volatile int8_t x = 0;
 volatile uint16_t stimPin = 0x0001;
 uint16_t state = 0x0001;
-uint8_t limitDuration = 1;
+uint8_t limitDuration[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+uint8_t stimCount = 0;
+
+// Display
+uint8_t modeNumber = 0;
+uint8_t lightNumber[3] = {0, 0, 0};
+uint8_t stepExper = 10;
 
 int main(void)
 {
@@ -138,18 +153,33 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE BEGIN 2 */
 
-  // Digipot Registration
-  HAL_Delay(50);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-  HAL_SPI_Transmit(&hspi1, spiRegister, 2, 50);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-  HAL_Delay(50);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-  HAL_SPI_Transmit(&hspi1, spiRegister, 2, 50);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-  rStep = 750;
-  
+  digipot_registration();
+  MPU_6050_registragion();
 
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    display_mode();
+    display_light();
+    if(enableStim == 1) spi_send();
+    read_MPU_6050_data();
+
+    /*if(state == 1)
+    {
+      HAL_GPIO_WritePin(GPIOD, gpioPin, GPIO_PIN_SET);
+    }
+    if(state == 2)
+    {
+      HAL_GPIO_WritePin(GPIOD, gpioPin, GPIO_PIN_RESET);
+    }*/
+  }
+  /* USER CODE END 3 */
+
+}
+
+void MPU_6050_registragion()
+{
   // Gyroscope Registration
   buffer[0] = 0x6B; // Send request to the register you want to access
 	buffer[1] = 0x00; // Set the requested register
@@ -163,57 +193,10 @@ int main(void)
 	buffer[1] = 0x10;  // Set the requested register
 	HAL_I2C_Master_Transmit(&hi2c1,0x68<<1,buffer,2,100);
 	// Finish setup MPU-6050 register
-  read_MPU_6050_data();
-
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-
-    /* USER CODE END WHILE */
-    /*
-    // SPI Packaging
-    spiResistance[0] = rStep>>8;
-    spiResistance[1] = rStep;
-    // Package checking
-    spiResistance[0] = (spiResistance[0]&spiCheck[0])|spiWrite[0];
-    spiResistance[1] = (spiResistance[1]&spiCheck[1])|spiWrite[1];
-    // SPI Change Digipot value
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-    HAL_SPI_Transmit(&hspi1, spiResistance, 2, 50);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-    HAL_Delay(50);
-
-
-    // I2C Read acceleration
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
-    read_MPU_6050_data();
-    HAL_Delay(50);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);*/
-
-    //HAL_Delay(1000);
-    /* USER CODE BEGIN 3 */
-    
-    if(state == 1)
-    {
-      HAL_GPIO_WritePin(GPIOD, gpioPin, GPIO_PIN_SET);
-    }
-    if(state == 2)
-    {
-      HAL_GPIO_WritePin(GPIOD, gpioPin, GPIO_PIN_RESET);
-    }
-    HAL_GPIO_WritePin(GPIOD, 0x1000, GPIO_PIN_SET);
-    HAL_Delay(50);
-    HAL_GPIO_WritePin(GPIOD, 0x1000, GPIO_PIN_RESET);
-    HAL_Delay(50);
-  }
-  /* USER CODE END 3 */
-
 }
-
 void read_MPU_6050_data()
 {
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
 	buffer[0] = 0x3B;//0x3B
 	HAL_I2C_Master_Transmit(&hi2c1,0x68<<1,buffer,1,100);
 	HAL_I2C_Master_Receive(&hi2c1,0x68<<1,buffer,6,100);
@@ -231,34 +214,76 @@ void read_MPU_6050_data()
 	gyro_z = buffer[4]<<8 | buffer[5];
 
   acc_total_vector = sqrt((acc_x*acc_x)+(acc_y*acc_y)+(acc_z*acc_z));
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+}
+
+void display_mode()
+{
+
+}
+void display_light()
+{
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11 
+                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15 
+                          |GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
+  if(lightNumber[modeNumber] == 0) HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, SET);
+  else if(lightNumber[modeNumber] == 1) HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, SET);
+  else if(lightNumber[modeNumber] == 2) HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, SET);
+  else if(lightNumber[modeNumber] == 3) HAL_GPIO_WritePin(GPIOD, GPIO_PIN_15, SET);
+}
+
+void digipot_registration()
+{
+  // Digipot Registration
+  HAL_Delay(50);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, spiRegister, 2, 50);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+  HAL_Delay(50);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, spiRegister, 2, 50);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+}
+void spi_send()
+{
+  rStep = rDigipot[lightNumber[0]];
+  // SPI Packaging
+  spiResistance[0] = rStep>>8;
+  spiResistance[1] = rStep;
+  // Package checking
+  spiResistance[0] = (spiResistance[0]&spiCheck[0])|spiWrite[0];
+  spiResistance[1] = (spiResistance[1]&spiCheck[1])|spiWrite[1];
+  // SPI Change Digipot value
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, spiResistance, 2, 50);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+  spiSent = 1;
+  HAL_Delay(50);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(TIM1==htim->Instance) // 312.5 us
   {
-    /*if(state==0)
+    if(spiSent==1)
     {
-      HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET);
-      state=1;
-    }
-    else
-    {
-      HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_SET);
-      state=0;
-    }*/
-    /*if(enableStim==1)
-    {
-      HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);
-      x=0;
-      while(x<limitDuration) x++;
-      x=1;x=2;x=3;x=4;
-      HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET);
+      if(stimCount)
+      {
+        HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);
+        x=0;
+        while(x<limitDuration[lightNumber[1]]) x++;
+        x=1;x=2;x=3;x=4;
+        HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET);
+      }
       stimPin = stimPin << 1;
-      if(stimPin == 0x0000) stimPin = 0x0001;
-    }*/
+      if(stimPin == 0x0000)
+      {
+        stimPin = 0x0001;
+        stimCount++;
+        stimCount %= 4;
+      }
+    }
   }
 }
 
@@ -426,8 +451,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA0 PA1 PA2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2;
+  /*Configure GPIO pins : PA0 PA1 PA2 PA3*/
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -451,12 +476,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PB3 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PB5 */
   GPIO_InitStruct.Pin = GPIO_PIN_5;
