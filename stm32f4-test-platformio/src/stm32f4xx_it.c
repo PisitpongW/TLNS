@@ -284,8 +284,16 @@ void EXTI3_IRQHandler(void)
   if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3))
   {
 
-    if(enableStim == 0) {enableStim = 1; spiSent = 1;}
-    else if(enableStim == 1) {enableStim = 0; spiSent = 1;}
+    if(enableStim == 0)
+    {
+      enableStim = 1;
+      spiSent = 1;
+    }
+    else if(enableStim == 1)
+    {
+      enableStim = 0;
+      spiSent = 1;
+    }
 
   }
   /* USER CODE END EXTI3_IRQn 0 */

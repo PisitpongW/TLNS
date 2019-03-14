@@ -98,6 +98,7 @@ uint8_t spiWrite[] = {0x04,0x00};
 uint16_t rStep;
 uint8_t spiResistance[2];
 uint16_t rDigipot[10] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
+float rDisplay[10] = {0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0};
 uint8_t spiSent = 0;
 
 
@@ -124,8 +125,10 @@ volatile int8_t x = 0;
 volatile uint16_t stimPin = 0x0001;
 uint16_t state = 0x0001;
 uint8_t limitDuration[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+float displayDuration[10] = {0.3, 1.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 50.0, 60.0};
 //uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 uint8_t stimCount = 0;
+uint16_t limitAccel = 15000;
 
 
 // Display
@@ -135,7 +138,7 @@ uint8_t stepExper = 10;
 uint8_t lcdCheck;
 char strInten[10];
 char strDurat[10];
-char strAccel[10];
+char strAccel[15];
 
 
 int main(void)
@@ -177,15 +180,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    display_mode();
-    if(spiSent == 1)
-    {
-      spi_send();
-    }
+    oled_display();
+
+    if(spiSent == 1) spi_send();
+
     read_MPU_6050_data();
+
+    if(acc_total_vector > limitAccel) enableStim = 1;
   }
   /* USER CODE END 3 */
-
 }
 
 
@@ -209,32 +212,35 @@ void oled_registration()
   SSD1306_Fill(0);
   SSD1306_UpdateScreen();
 }
-void display_mode()
+void oled_display()
 {
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
   if(modeNumber == 0) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
   else if(modeNumber == 1) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+  if(enableStim == 0) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+  else if(enableStim == 1) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+
 
   // Intensity display
-  SSD1306_GotoXY(5,0);
+  SSD1306_GotoXY(5,2);
   SSD1306_Puts(" I: ", &Font_11x18, 1);
-  itoa(rDigipot[lightNumber[0]], strInten, 10);
-  //gcvt(rDigipot[lightNumber[0]], 3, strInten);
+  //itoa(rDisplay[lightNumber[0]], strInten, 10); // 10 is decimal
+  gcvt(rDisplay[lightNumber[0]], 3, strInten);
   SSD1306_Puts(strInten, &Font_11x18, 1);
   SSD1306_Puts(" mA    ", &Font_11x18, 1);
   
   // Pulse width display
-  SSD1306_GotoXY(5,20);
+  SSD1306_GotoXY(5,22);
   SSD1306_Puts("PW: ", &Font_11x18, 1);
-  itoa(limitDuration[lightNumber[1]], strDurat, 10);
-  //gcvt(limitDuration[lightNumber[1]], 3, strDurat);
+  //itoa(displayDuration[lightNumber[1]], strDurat, 10); // 10 is decimal
+  gcvt(displayDuration[lightNumber[1]], 3, strDurat);
   SSD1306_Puts(strDurat, &Font_11x18, 1);
   SSD1306_Puts(" uS    ", &Font_11x18, 1);
 
   // Acceleration display
-  SSD1306_GotoXY(5,40);
+  SSD1306_GotoXY(5,42);
   SSD1306_Puts(" A: ", &Font_11x18, 1);
-  itoa(acc_total_vector, 3, strAccel);
+  itoa(acc_total_vector, strAccel,10); // 10 is decimal
   //gcvt(acc_total_vector, 3, strAccel);
   SSD1306_Puts(strAccel, &Font_11x18, 1);
   SSD1306_Puts("       ", &Font_11x18, 1);
@@ -319,7 +325,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   {
     if(enableStim == 1)
     {
-      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, SET);
       if(stimCount)
       {
         HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);
@@ -336,7 +341,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         stimCount %= 4;
       }
     }
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, RESET);
   }
 }
 
