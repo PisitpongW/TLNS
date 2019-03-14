@@ -43,7 +43,7 @@
 /* USER CODE BEGIN Includes */
 #include "math.h"
 #include "ssd1306.h"
-#include "i2c-lcd.h"
+//#include "i2c-lcd.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -74,6 +74,7 @@ void display_light(void);
 void spi_send(void);
 void digipot_registration(void);
 void MPU_6050_registragion(void);
+void oled_registration(void);
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -132,6 +133,9 @@ uint8_t modeNumber = 0;
 uint8_t lightNumber[3] = {0, 0, 0};
 uint8_t stepExper = 10;
 uint8_t lcdCheck;
+char strInten[10];
+char strDurat[10];
+char strAccel[10];
 
 
 int main(void)
@@ -165,6 +169,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE BEGIN 2 */
 
+  oled_registration();
   digipot_registration();
   MPU_6050_registragion();
 
@@ -173,12 +178,69 @@ int main(void)
   while (1)
   {
     display_mode();
-    if(spiSent == 1) spi_send();
+    if(spiSent == 1)
+    {
+      spi_send();
+    }
     read_MPU_6050_data();
   }
   /* USER CODE END 3 */
 
 }
+
+
+void oled_registration()
+{
+  lcdCheck = SSD1306_Init();
+  /*int a = 1234;
+  itoa(a, strInten, 10);
+  float f = 15.6789;
+  gcvt(f, 4, strDurat);*/
+
+  SSD1306_Fill(0);  // fill color 0 ie black
+  SSD1306_UpdateScreen();   // print the changes on the display
+
+  SSD1306_GotoXY(15,20);  // goto 10,20
+  SSD1306_Puts("-TLNS-", &Font_16x26, 1);
+
+  SSD1306_UpdateScreen();   // print the changes on the display
+  HAL_Delay(1000);
+
+  SSD1306_Fill(0);
+  SSD1306_UpdateScreen();
+}
+void display_mode()
+{
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+  if(modeNumber == 0) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
+  else if(modeNumber == 1) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+
+  // Intensity display
+  SSD1306_GotoXY(5,0);
+  SSD1306_Puts(" I: ", &Font_11x18, 1);
+  itoa(rDigipot[lightNumber[0]], strInten, 10);
+  //gcvt(rDigipot[lightNumber[0]], 3, strInten);
+  SSD1306_Puts(strInten, &Font_11x18, 1);
+  SSD1306_Puts(" mA    ", &Font_11x18, 1);
+  
+  // Pulse width display
+  SSD1306_GotoXY(5,20);
+  SSD1306_Puts("PW: ", &Font_11x18, 1);
+  itoa(limitDuration[lightNumber[1]], strDurat, 10);
+  //gcvt(limitDuration[lightNumber[1]], 3, strDurat);
+  SSD1306_Puts(strDurat, &Font_11x18, 1);
+  SSD1306_Puts(" uS    ", &Font_11x18, 1);
+
+  // Acceleration display
+  SSD1306_GotoXY(5,40);
+  SSD1306_Puts(" A: ", &Font_11x18, 1);
+  itoa(acc_total_vector, 3, strAccel);
+  //gcvt(acc_total_vector, 3, strAccel);
+  SSD1306_Puts(strAccel, &Font_11x18, 1);
+  SSD1306_Puts("       ", &Font_11x18, 1);
+  SSD1306_UpdateScreen();
+}
+
 
 void MPU_6050_registragion()
 {
@@ -221,12 +283,6 @@ void read_MPU_6050_data()
   HAL_Delay(10);
 }
 
-void display_mode()
-{
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
-  if(modeNumber == 0) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-  else if(modeNumber == 1) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-}
 
 void digipot_registration()
 {
@@ -256,12 +312,14 @@ void spi_send()
   spiSent = 0;
 }
 
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(TIM1==htim->Instance) // 312.5 us
   {
     if(enableStim == 1)
     {
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, SET);
       if(stimCount)
       {
         HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);
@@ -278,6 +336,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         stimCount %= 4;
       }
     }
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, RESET);
   }
 }
 
