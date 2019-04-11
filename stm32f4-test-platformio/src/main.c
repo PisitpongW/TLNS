@@ -186,7 +186,7 @@ int main(void)
 
     read_MPU_6050_data();
 
-    if(acc_total_vector > limitAccel) enableStim = 1;
+    //if(acc_total_vector > limitAccel) enableStim = 1;
   }
   /* USER CODE END 3 */
 }
@@ -323,15 +323,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(TIM1==htim->Instance) // 312.5 us
   {
-    if(enableStim == 1)
-    {
+    //if(enableStim == 1)
+    //{
       if(stimCount)
       {
-        HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
+        HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
         x=0;
         while(x<limitDuration[lightNumber[1]]) x++;
         x=1;x=2;x=3;x=4;
-        HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET); // Stop stimulation
+        HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_SET);   // Start being ground
       }
       stimPin = stimPin << 1;
       if(stimPin == 0x0000)
@@ -340,7 +342,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         stimCount++;
         stimCount %= 4;
       }
-    }
+    //}
   }
 }
 
@@ -528,6 +530,12 @@ static void MX_GPIO_Init(void)
                           |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15 
                           |GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
                           |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
+  
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11 
+                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15 
+                          |GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_SET);
 
   /*Configure GPIO pins : PA0 PA1 PA2 PA3*/
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3;
@@ -561,6 +569,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PE8 PE9 PE10 PE11 
+                           PE12 PE13 PE14 PE15 
+                           PE0 PE1 PE2 PE3 
+                           PE4 PE5 PE6 PE7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11 
+                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15 
+                          |GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
