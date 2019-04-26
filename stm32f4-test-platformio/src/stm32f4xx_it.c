@@ -202,12 +202,12 @@ void SysTick_Handler(void)
 /**
 * @brief This function handles EXTI line0 interrupt.
 */
-void EXTI0_IRQHandler(void)
+void EXTI3_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI0_IRQn 0 */
   for(uint16_t i=0; i<65535; i++);
   // Mode button
-  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3))
   {
     /*if(state == 1) state = 2;
     else if(state == 2) state = 1;*/
@@ -217,7 +217,7 @@ void EXTI0_IRQHandler(void)
 
   }
   /* USER CODE END EXTI0_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
   
   /* USER CODE END EXTI0_IRQn 1 */
@@ -251,12 +251,12 @@ void EXTI1_IRQHandler(void)
 /**
 * @brief This function handles EXTI line2 interrupt.
 */
-void EXTI2_IRQHandler(void)
+void EXTI0_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI2_IRQn 0 */
   for(uint16_t i=0; i<65535; i++);
   // Decrease button
-  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2))
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
   {
 
     if(lightNumber[modeNumber] < stepExper-1)
@@ -267,7 +267,7 @@ void EXTI2_IRQHandler(void)
 
   }
   /* USER CODE END EXTI2_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI2_IRQn 1 */
 
   /* USER CODE END EXTI2_IRQn 1 */
@@ -276,12 +276,12 @@ void EXTI2_IRQHandler(void)
 /**
 * @brief This function handles EXTI line3 interrupt.
 */
-void EXTI3_IRQHandler(void)
+void EXTI2_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI3_IRQn 0 */
   for(uint16_t i=0; i<65535; i++);
   // Stimulation button
-  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3))
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2))
   {
 
     if(enableStim == 0)
@@ -296,7 +296,7 @@ void EXTI3_IRQHandler(void)
     }
   }
   /* USER CODE END EXTI3_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
   /* USER CODE BEGIN EXTI3_IRQn 1 */
 
   /* USER CODE END EXTI3_IRQn 1 */
