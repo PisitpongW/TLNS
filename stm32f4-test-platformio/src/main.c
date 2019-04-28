@@ -220,10 +220,10 @@ void oled_display()
   if(enableStim == 0) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
   else if(enableStim == 1) HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 
-
   // Intensity display
   SSD1306_GotoXY(5,2);
-  SSD1306_Puts(" I: ", &Font_11x18, 1);
+  if(modeNumber == 0) SSD1306_Puts("> I:", &Font_11x18, 1);
+  else SSD1306_Puts("  I:", &Font_11x18, 1);
   //itoa(rDisplay[lightNumber[0]], strInten, 10); // 10 is decimal
   gcvt(rDisplay[lightNumber[0]], 3, strInten);
   SSD1306_Puts(strInten, &Font_11x18, 1);
@@ -231,7 +231,8 @@ void oled_display()
   
   // Pulse width display
   SSD1306_GotoXY(5,22);
-  SSD1306_Puts("PW: ", &Font_11x18, 1);
+  if(modeNumber == 0) SSD1306_Puts(" PW:", &Font_11x18, 1);
+  else SSD1306_Puts(">PW:", &Font_11x18, 1);
   //itoa(displayDuration[lightNumber[1]], strDurat, 10); // 10 is decimal
   gcvt(displayDuration[lightNumber[1]], 3, strDurat);
   SSD1306_Puts(strDurat, &Font_11x18, 1);
@@ -323,8 +324,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(TIM1==htim->Instance) // 312.5 us
   {
-    //if(enableStim == 1)
-    //{
+    if(enableStim == 1)
+    {
       if(stimCount)
       {
         HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
@@ -342,7 +343,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         stimCount++;
         stimCount %= 4;
       }
-    //}
+    }
   }
 }
 
