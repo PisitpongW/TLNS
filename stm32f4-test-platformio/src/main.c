@@ -75,6 +75,7 @@ void spi_send(void);
 void digipot_registration(void);
 void MPU_6050_registragion(void);
 void oled_registration(void);
+void oled_display(void);
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -133,7 +134,7 @@ uint16_t limitAccel = 15000;
 
 // Display
 uint8_t modeNumber = 0;
-uint8_t lightNumber[3] = {0, 0, 0};
+uint16_t lightNumber[3] = {0, 0, 0};
 uint16_t stepExper = 1024;
 uint8_t lcdCheck;
 char strInten[10];
@@ -230,8 +231,8 @@ void oled_display()
   SSD1306_GotoXY(5,2);
   if(modeNumber == 0) SSD1306_Puts("> I:", &Font_11x18, 1);
   else SSD1306_Puts("  I:", &Font_11x18, 1);
-  //itoa(rDisplay[lightNumber[0]], strInten, 10); // 10 is decimal
-  gcvt(rDigipot[lightNumber[0]], 3, strInten);
+  itoa(rDigipot[lightNumber[0]], strInten, 10); // 10 is decimal
+  //gcvt(rDisplay[lightNumber[0]], 3, strInten);
   SSD1306_Puts(strInten, &Font_11x18, 1);
   SSD1306_Puts(" mA    ", &Font_11x18, 1);
   
@@ -239,8 +240,8 @@ void oled_display()
   SSD1306_GotoXY(5,22);
   if(modeNumber == 0) SSD1306_Puts(" PW:", &Font_11x18, 1);
   else SSD1306_Puts(">PW:", &Font_11x18, 1);
-  //itoa(displayDuration[lightNumber[1]], strDurat, 10); // 10 is decimal
-  gcvt(limitDuration[lightNumber[1]], 3, strDurat);
+  itoa(limitDuration[lightNumber[1]], strDurat, 10); // 10 is decimal
+  //gcvt(displayDuration[lightNumber[1]], 3, strDurat);
   SSD1306_Puts(strDurat, &Font_11x18, 1);
   SSD1306_Puts(" uS    ", &Font_11x18, 1);
 
