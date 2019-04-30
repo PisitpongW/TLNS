@@ -129,6 +129,7 @@ uint16_t limitDuration[1024];// = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 float displayDuration[10] = {0.3, 1.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 50.0, 60.0};
 //uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 uint8_t stimCount = 0;
+uint8_t stimRec = 0;
 uint16_t limitAccel = 15000;
 
 
@@ -182,7 +183,7 @@ int main(void)
   for(i=0 ; i<1024 ; i++)
   {
     rDigipot[i] = 1023-i;
-    limitDuration[i] = i;
+    limitDuration[i] = i+1;
   }
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -349,6 +350,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         stimPin = 0x0001;
         stimCount++;
         stimCount %= 4;
+
+        stimRec++;
+        if(stimRec == 100)
+        {
+          spiSent = 1;
+          lightNumber[0]++;
+          stimRec = 0;
+        }
       }
     }
   }
