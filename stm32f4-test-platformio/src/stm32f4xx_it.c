@@ -42,7 +42,7 @@ extern uint16_t state;
 
 extern uint8_t modeNumber;
 extern uint8_t lightNumber[3];
-extern uint8_t stepExper;
+extern uint16_t stepExper;
 extern uint8_t spiSent;
 /* USER CODE END 0 */
 

@@ -97,7 +97,7 @@ uint8_t spiCheck[] = {0x03,0xFF};
 uint8_t spiWrite[] = {0x04,0x00};
 uint16_t rStep;
 uint8_t spiResistance[2];
-uint16_t rDigipot[10] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
+uint16_t rDigipot[1024];// = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10};
 float rDisplay[10] = {0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0};
 uint8_t spiSent = 0;
 
@@ -124,7 +124,7 @@ uint8_t enableStim = 0;
 volatile int8_t x = 0;
 volatile uint16_t stimPin = 0x0001;
 uint16_t state = 0x0001;
-uint8_t limitDuration[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+uint16_t limitDuration[1024];// = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 float displayDuration[10] = {0.3, 1.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 50.0, 60.0};
 //uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 uint8_t stimCount = 0;
@@ -134,7 +134,7 @@ uint16_t limitAccel = 15000;
 // Display
 uint8_t modeNumber = 0;
 uint8_t lightNumber[3] = {0, 0, 0};
-uint8_t stepExper = 10;
+uint16_t stepExper = 1024;
 uint8_t lcdCheck;
 char strInten[10];
 char strDurat[10];
@@ -177,6 +177,12 @@ int main(void)
   MPU_6050_registragion();
 
   /* Infinite loop */
+  uint16_t i;
+  for(i=0 ; i<1024 ; i++)
+  {
+    rDigipot[i] = 1023-i;
+    limitDuration[i] = i;
+  }
   /* USER CODE BEGIN WHILE */
   while (1)
   {
@@ -225,7 +231,7 @@ void oled_display()
   if(modeNumber == 0) SSD1306_Puts("> I:", &Font_11x18, 1);
   else SSD1306_Puts("  I:", &Font_11x18, 1);
   //itoa(rDisplay[lightNumber[0]], strInten, 10); // 10 is decimal
-  gcvt(rDisplay[lightNumber[0]], 3, strInten);
+  gcvt(rDigipot[lightNumber[0]], 3, strInten);
   SSD1306_Puts(strInten, &Font_11x18, 1);
   SSD1306_Puts(" mA    ", &Font_11x18, 1);
   
@@ -234,7 +240,7 @@ void oled_display()
   if(modeNumber == 0) SSD1306_Puts(" PW:", &Font_11x18, 1);
   else SSD1306_Puts(">PW:", &Font_11x18, 1);
   //itoa(displayDuration[lightNumber[1]], strDurat, 10); // 10 is decimal
-  gcvt(displayDuration[lightNumber[1]], 3, strDurat);
+  gcvt(limitDuration[lightNumber[1]], 3, strDurat);
   SSD1306_Puts(strDurat, &Font_11x18, 1);
   SSD1306_Puts(" uS    ", &Font_11x18, 1);
 
@@ -519,6 +525,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
