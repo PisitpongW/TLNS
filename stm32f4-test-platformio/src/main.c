@@ -129,14 +129,14 @@ uint16_t limitDuration[1024];// = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 float displayDuration[10] = {0.3, 1.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 50.0, 60.0};
 //uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 uint8_t stimCount = 0;
-uint8_t stimRec = 0;
+uint16_t stimRec = 0;
 uint16_t limitAccel = 15000;
 
 
 // Display
 uint8_t modeNumber = 0;
 uint16_t lightNumber[3] = {0, 0, 0};
-uint16_t stepExper = 1024;
+uint16_t stepExper = 300;
 uint8_t lcdCheck;
 char strInten[10];
 char strDurat[10];
@@ -182,7 +182,7 @@ int main(void)
   uint16_t i;
   for(i=0 ; i<1024 ; i++)
   {
-    rDigipot[i] = 1023-i;
+    rDigipot[i] = i;
     limitDuration[i] = i+1;
   }
   /* USER CODE BEGIN WHILE */
@@ -336,13 +336,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
       if(stimCount)
       {
-        HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
-        HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
+        if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
+        if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
         x=0;
         while(x<limitDuration[lightNumber[1]]) x++;
         x=1;x=2;x=3;x=4;
-        HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET); // Stop stimulation
-        HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_SET);   // Start being ground
+        if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET); // Stop stimulation
+        if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_SET);   // Start being ground
       }
       stimPin = stimPin << 1;
       if(stimPin == 0x0000)
@@ -352,7 +352,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         stimCount %= 4;
 
         stimRec++;
-        if(stimRec == 100)
+        if(stimRec == 1000) // 100 for 0.5 second
         {
           spiSent = 1;
           lightNumber[0]++;
