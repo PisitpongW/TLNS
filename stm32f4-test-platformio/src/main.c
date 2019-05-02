@@ -122,10 +122,10 @@ int16_t acc_x, acc_y, acc_z, acc_total_vector;
 
 // Stimulation
 uint8_t enableStim = 0;
-volatile int8_t x = 0;
+volatile int16_t x = 0;
 volatile uint16_t stimPin = 0x0001;
 uint16_t state = 0x0001;
-uint16_t limitDuration[1024];// = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+uint32_t limitDuration[1024];// = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 float displayDuration[10] = {0.3, 1.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 50.0, 60.0};
 //uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 uint8_t stimCount = 0;
@@ -136,7 +136,7 @@ uint16_t limitAccel = 15000;
 // Display
 uint8_t modeNumber = 0;
 uint16_t lightNumber[3] = {0, 0, 0};
-uint16_t stepExper = 300;
+uint16_t stepExper = 1024;
 uint8_t lcdCheck;
 char strInten[10];
 char strDurat[10];
@@ -180,10 +180,10 @@ int main(void)
 
   /* Infinite loop */
   uint16_t i;
-  for(i=0 ; i<1024 ; i++)
+  for(i=0 ; i<stepExper ; i++)
   {
     rDigipot[i] = i;
-    limitDuration[i] = i+1;
+    limitDuration[i] = 100*i;
   }
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -231,7 +231,7 @@ void oled_display()
   // Intensity display
   SSD1306_GotoXY(5,2);
   if(modeNumber == 0) SSD1306_Puts("> I:", &Font_11x18, 1);
-  else SSD1306_Puts("  I:", &Font_11x18, 1);
+  else if(modeNumber == 1) SSD1306_Puts("  I:", &Font_11x18, 1);
   itoa(rDigipot[lightNumber[0]], strInten, 10); // 10 is decimal
   //gcvt(rDisplay[lightNumber[0]], 3, strInten);
   SSD1306_Puts(strInten, &Font_11x18, 1);
@@ -240,7 +240,7 @@ void oled_display()
   // Pulse width display
   SSD1306_GotoXY(5,22);
   if(modeNumber == 0) SSD1306_Puts(" PW:", &Font_11x18, 1);
-  else SSD1306_Puts(">PW:", &Font_11x18, 1);
+  else if(modeNumber == 1) SSD1306_Puts(">PW:", &Font_11x18, 1);
   itoa(limitDuration[lightNumber[1]], strDurat, 10); // 10 is decimal
   //gcvt(displayDuration[lightNumber[1]], 3, strDurat);
   SSD1306_Puts(strDurat, &Font_11x18, 1);
@@ -249,10 +249,10 @@ void oled_display()
   // Acceleration display
   SSD1306_GotoXY(5,42);
   SSD1306_Puts(" A: ", &Font_11x18, 1);
-  itoa(acc_total_vector, strAccel,10); // 10 is decimal
   //gcvt(acc_total_vector, 3, strAccel);
+  itoa(acc_total_vector, strAccel,10); // 10 is decimal
   SSD1306_Puts(strAccel, &Font_11x18, 1);
-  SSD1306_Puts("       ", &Font_11x18, 1);
+  SSD1306_Puts("     ", &Font_11x18, 1);
   SSD1306_UpdateScreen();
 }
 
@@ -336,6 +336,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
       if(stimCount)
       {
+        if(lightNumber[0]%2==0)lightNumber[1]=1;
+        else lightNumber[1]=2;
+        
         if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
         if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
         x=0;

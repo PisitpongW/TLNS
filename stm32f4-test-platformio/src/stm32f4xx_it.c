@@ -41,7 +41,7 @@ extern uint8_t enableStim;
 extern uint16_t state;
 
 extern uint8_t modeNumber;
-extern uint8_t lightNumber[3];
+extern uint16_t lightNumber[3];
 extern uint16_t stepExper;
 extern uint8_t spiSent;
 /* USER CODE END 0 */
@@ -283,7 +283,6 @@ void EXTI2_IRQHandler(void)
   // Stimulation button
   if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2))
   {
-
     if(enableStim == 0)
     {
       enableStim = 1;
