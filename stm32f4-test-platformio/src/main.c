@@ -98,8 +98,9 @@ uint8_t spiCheck[] = {0x03,0xFF};
 uint8_t spiWrite[] = {0x04,0x00};
 uint16_t rStep;
 uint8_t spiResistance[2];
-uint16_t rDigipot[1024];// = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10};
-float rDisplay[10] = {0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0};
+//uint16_t rDigipot[1024];
+uint16_t rDigipot[33] = {1008, 889, 366, 208, 152, 114, 89, 75, 64, 56, 49, 43, 39, 34, 31, 28, 26, 24, 21, 20, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 1};
+float rDisplay[33] = {1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.4, 4.6, 4.8, 5.0};
 uint8_t spiSent = 0;
 
 
@@ -125,8 +126,9 @@ uint8_t enableStim = 0;
 volatile int16_t x = 0;
 volatile uint16_t stimPin = 0x0001;
 uint16_t state = 0x0001;
-uint32_t limitDuration[1024];// = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-float displayDuration[10] = {0.3, 1.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 50.0, 60.0};
+//uint32_t limitDuration[1024];
+float limitDuration[33] = {200, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33};
+float displayDuration[33] = {200, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33};
 //uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 uint8_t stimCount = 0;
 uint16_t stimRec = 0;
@@ -136,7 +138,7 @@ uint16_t limitAccel = 15000;
 // Display
 uint8_t modeNumber = 0;
 uint16_t lightNumber[3] = {0, 0, 0};
-uint16_t stepExper = 1024;
+uint16_t stepExper = 33;
 uint8_t lcdCheck;
 char strInten[10];
 char strDurat[10];
@@ -179,12 +181,11 @@ int main(void)
   MPU_6050_registragion();
 
   /* Infinite loop */
-  uint16_t i;
+  /*uint16_t i;
   for(i=0 ; i<stepExper ; i++)
   {
-    rDigipot[i] = i;
     limitDuration[i] = 100*i;
-  }
+  }*/
   /* USER CODE BEGIN WHILE */
   while (1)
   {
@@ -232,8 +233,8 @@ void oled_display()
   SSD1306_GotoXY(5,2);
   if(modeNumber == 0) SSD1306_Puts("> I:", &Font_11x18, 1);
   else if(modeNumber == 1) SSD1306_Puts("  I:", &Font_11x18, 1);
-  itoa(rDigipot[lightNumber[0]], strInten, 10); // 10 is decimal
-  //gcvt(rDisplay[lightNumber[0]], 3, strInten);
+  //itoa(rDigipot[lightNumber[0]], strInten, 10); // 10 is decimal
+  gcvt(rDisplay[lightNumber[0]], 3, strInten);
   SSD1306_Puts(strInten, &Font_11x18, 1);
   SSD1306_Puts(" mA    ", &Font_11x18, 1);
   
@@ -336,9 +337,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
       if(stimCount)
       {
-        if(lightNumber[0]%2==0)lightNumber[1]=1;
-        else lightNumber[1]=2;
-        
+        //if(lightNumber[0]%2==0)lightNumber[1]=1;
+        //else lightNumber[1]=2;
+
         if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
         if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
         x=0;
@@ -355,7 +356,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         stimCount %= 4;
 
         stimRec++;
-        if(stimRec == 1000) // 100 for 0.5 second
+        if(stimRec == 400 && lightNumber[0] < stepExper-1) // 100 for 0.5 second
         {
           spiSent = 1;
           lightNumber[0]++;
