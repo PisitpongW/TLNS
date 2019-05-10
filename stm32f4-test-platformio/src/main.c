@@ -123,12 +123,12 @@ int16_t acc_x, acc_y, acc_z, acc_total_vector;
 
 // Stimulation
 uint8_t enableStim = 0;
-volatile int16_t x = 0;
+volatile int32_t x = 0;
 volatile uint16_t stimPin = 0x0001;
 uint16_t state = 0x0001;
 //uint32_t limitDuration[1024];
-float limitDuration[33] = {200, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33};
-float displayDuration[33] = {200, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33};
+uint16_t limitDuration[33] = {1, 2, 4, 5, 62, 94, 120, 162, 196, 230, 264, 298, 331, 365, 399, 433, 467, 501, 535, 569, 603, 637, 671, 705, 739, 773, 807, 841, 875, 909, 943, 976, 1010};
+float displayDuration[33] = {0.3, 0.5, 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24,26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60};
 //uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 uint8_t stimCount = 0;
 uint16_t stimRec = 0;
@@ -242,8 +242,8 @@ void oled_display()
   SSD1306_GotoXY(5,22);
   if(modeNumber == 0) SSD1306_Puts(" PW:", &Font_11x18, 1);
   else if(modeNumber == 1) SSD1306_Puts(">PW:", &Font_11x18, 1);
-  itoa(limitDuration[lightNumber[1]], strDurat, 10); // 10 is decimal
-  //gcvt(displayDuration[lightNumber[1]], 3, strDurat);
+  //itoa(limitDuration[lightNumber[1]], strDurat, 10); // 10 is decimal
+  gcvt(displayDuration[lightNumber[1]], 3, strDurat);
   SSD1306_Puts(strDurat, &Font_11x18, 1);
   SSD1306_Puts(" uS    ", &Font_11x18, 1);
 
@@ -251,7 +251,7 @@ void oled_display()
   SSD1306_GotoXY(5,42);
   SSD1306_Puts(" A: ", &Font_11x18, 1);
   //gcvt(acc_total_vector, 3, strAccel);
-  itoa(acc_total_vector, strAccel,10); // 10 is decimal
+  itoa(acc_total_vector/100, strAccel,10); // 10 is decimal
   SSD1306_Puts(strAccel, &Font_11x18, 1);
   SSD1306_Puts("     ", &Font_11x18, 1);
   SSD1306_UpdateScreen();
@@ -340,13 +340,35 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         //if(lightNumber[0]%2==0)lightNumber[1]=1;
         //else lightNumber[1]=2;
 
-        if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
-        if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
-        x=0;
-        while(x<limitDuration[lightNumber[1]]) x++;
-        x=1;x=2;x=3;x=4;
-        if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET); // Stop stimulation
-        if(stimPin == GPIO_PIN_8)HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_SET);   // Start being ground
+        /*if(stimPin == GPIO_PIN_11)*/HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
+        /*if(stimPin == GPIO_PIN_11)*/HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
+        /*switch(limitDuration[lightNumber[1]])
+        {
+          case 1: x=1;x=2;x=3;x=4;x=5;x=6;x=7;x=8;x=9;x=10;break;
+          case 2: x=1;x=2;x=3;x=4;x=5;x=6;x=7;x=8;x=9;x=10;x=1;x=2;x=3;x=4;x=5;x=6;x=7;x=8;x=9;x=10;x=1;x=2;x=3;x=4;x=5;break;
+          case 3: x++;x++; break;
+        }*/
+        if(limitDuration[lightNumber[1]]<=5)
+        {
+          x=1;
+          switch(limitDuration[lightNumber[1]])
+          {
+            case 1: x=1;x++;break;
+            case 2: x++;x++;x++;x++;x++;x++;x++;x++;break;
+            case 3: x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;break;
+            case 4: x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;break;
+            case 5: x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;
+                    x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;x++;
+                    x++;x++;x++;x++;x++;x++;break;
+          }
+        }
+        else
+        {
+          x=1;
+          while(x<=limitDuration[lightNumber[1]]) {x++;}
+        }
+        /*if(stimPin == GPIO_PIN_11)*/HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET); // Stop stimulation
+        /*if(stimPin == GPIO_PIN_11)*/HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_SET);   // Start being ground
       }
       stimPin = stimPin << 1;
       if(stimPin == 0x0000)
@@ -355,13 +377,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         stimCount++;
         stimCount %= 4;
 
-        stimRec++;
+        /*stimRec++;
         if(stimRec == 400 && lightNumber[0] < stepExper-1) // 100 for 0.5 second
         {
           spiSent = 1;
           lightNumber[0]++;
           stimRec = 0;
-        }
+        }*/
       }
     }
   }
