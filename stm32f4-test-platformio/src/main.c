@@ -128,7 +128,7 @@ volatile uint16_t stimPin = 0x0001;
 uint16_t state = 0x0001;
 //uint32_t limitDuration[1024];
 uint16_t limitDuration[33] = {1, 2, 4, 5, 62, 94, 120, 162, 196, 230, 264, 298, 331, 365, 399, 433, 467, 501, 535, 569, 603, 637, 671, 705, 739, 773, 807, 841, 875, 909, 943, 976, 1010};
-float displayDuration[33] = {0.3, 0.5, 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24,26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60};
+float displayDuration[33] = {0.3, 0.5, 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60};
 //uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 uint8_t stimCount = 0;
 uint16_t stimRec = 0;
@@ -337,17 +337,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
       if(stimCount)
       {
-        //if(lightNumber[0]%2==0)lightNumber[1]=1;
-        //else lightNumber[1]=2;
 
-        /*if(stimPin == GPIO_PIN_11)*/HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
-        /*if(stimPin == GPIO_PIN_11)*/HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
-        /*switch(limitDuration[lightNumber[1]])
-        {
-          case 1: x=1;x=2;x=3;x=4;x=5;x=6;x=7;x=8;x=9;x=10;break;
-          case 2: x=1;x=2;x=3;x=4;x=5;x=6;x=7;x=8;x=9;x=10;x=1;x=2;x=3;x=4;x=5;x=6;x=7;x=8;x=9;x=10;x=1;x=2;x=3;x=4;x=5;break;
-          case 3: x++;x++; break;
-        }*/
+        if(stimPin == GPIO_PIN_11)HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
+        if(stimPin == GPIO_PIN_11)HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
+
         if(limitDuration[lightNumber[1]]<=5)
         {
           x=1;
@@ -367,8 +360,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           x=1;
           while(x<=limitDuration[lightNumber[1]]) {x++;}
         }
-        /*if(stimPin == GPIO_PIN_11)*/HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET); // Stop stimulation
-        /*if(stimPin == GPIO_PIN_11)*/HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_SET);   // Start being ground
+        if(stimPin == GPIO_PIN_11)HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET); // Stop stimulation
+        if(stimPin == GPIO_PIN_11)HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_SET);   // Start being ground
       }
       stimPin = stimPin << 1;
       if(stimPin == 0x0000)
