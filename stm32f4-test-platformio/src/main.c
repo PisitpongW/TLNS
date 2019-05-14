@@ -99,8 +99,8 @@ uint8_t spiWrite[] = {0x04,0x00};
 uint16_t rStep;
 uint8_t spiResistance[2];
 //uint16_t rDigipot[1024];
-uint16_t rDigipot[33] = {1008, 889, 366, 208, 152, 114, 89, 75, 64, 56, 49, 43, 39, 34, 31, 28, 26, 24, 21, 20, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 1};
-float rDisplay[33] = {1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.4, 4.6, 4.8, 5.0};
+uint16_t rDigipot[33] = {152/*1008*/, 889, 366, 208, 152, 114, 89, 75, 64, 56, 49, 43, 39, 34, 31, 28, 26, 24, 21, 20, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 1};
+float rDisplay[33] = {1.7, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.4, 4.6, 4.8, 5.0};
 uint8_t spiSent = 0;
 
 
@@ -127,8 +127,8 @@ volatile int32_t x = 0;
 volatile uint16_t stimPin = 0x0001;
 uint16_t state = 0x0001;
 //uint32_t limitDuration[1024];
-uint16_t limitDuration[33] = {1, 2, 4, 5, 62, 94, 120, 162, 196, 230, 264, 298, 331, 365, 399, 433, 467, 501, 535, 569, 603, 637, 671, 705, 739, 773, 807, 841, 875, 909, 943, 976, 1010};
-float displayDuration[33] = {0.3, 0.5, 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60};
+uint16_t limitDuration[33] = {501, 2, 4, 5, 62, 94, 120, 162, 196, 230, 264, 298, 331, 365, 399, 433, 467, 501, 535, 569, 603, 637, 671, 705, 739, 773, 807, 841, 875, 909, 943, 976, 1010};
+float displayDuration[33] = {30/*0.3*/, 0.5, 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60};
 //uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 uint8_t stimCount = 0;
 uint16_t stimRec = 0;
@@ -333,15 +333,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(TIM1==htim->Instance) // 312.5 us
   {
-    if(enableStim == 1)
-    {
+    //if(enableStim == 1)
+    //{
       if(stimCount)
       {
 
-        if(stimPin == GPIO_PIN_11)HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
-        if(stimPin == GPIO_PIN_11)HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
+        /*if(stimPin == GPIO_PIN_3)*/ HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_RESET); // Stop being ground
+        /*if(stimPin == GPIO_PIN_3)*/ HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_SET);   // Start stimulation
 
         if(limitDuration[lightNumber[1]]<=5)
+        
         {
           x=1;
           switch(limitDuration[lightNumber[1]])
@@ -360,8 +361,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           x=1;
           while(x<=limitDuration[lightNumber[1]]) {x++;}
         }
-        if(stimPin == GPIO_PIN_11)HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET); // Stop stimulation
-        if(stimPin == GPIO_PIN_11)HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_SET);   // Start being ground
+        /*if(stimPin == GPIO_PIN_3)*/ HAL_GPIO_WritePin(GPIOD, stimPin, GPIO_PIN_RESET); // Stop stimulation
+        /*if(stimPin == GPIO_PIN_3)*/ HAL_GPIO_WritePin(GPIOE, stimPin, GPIO_PIN_SET);   // Start being ground
       }
       stimPin = stimPin << 1;
       if(stimPin == 0x0000)
@@ -378,7 +379,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           stimRec = 0;
         }*/
       }
-    }
+    //}
   }
 }
 
