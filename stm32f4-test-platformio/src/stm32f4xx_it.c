@@ -213,7 +213,7 @@ void EXTI3_IRQHandler(void)
     else if(state == 2) state = 1;*/
 
     modeNumber++;
-    modeNumber %= 2;
+    modeNumber %= 3;
 
   }
   /* USER CODE END EXTI0_IRQn 0 */

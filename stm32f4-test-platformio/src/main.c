@@ -100,7 +100,7 @@ uint16_t rStep;
 uint8_t spiResistance[2];
 //uint16_t rDigipot[1024];
 uint16_t rDigipot[33] = {152/*1008*/, 889, 366, 208, 152, 114, 89, 75, 64, 56, 49, 43, 39, 34, 31, 28, 26, 24, 21, 20, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 1};
-float rDisplay[33] = {1.7, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.4, 4.6, 4.8, 5.0};
+float rDisplay[33] = {1.7/*1.3*/, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.4, 4.6, 4.8, 5.0};
 uint8_t spiSent = 0;
 
 
@@ -119,6 +119,8 @@ int16_t acc_x, acc_y, acc_z, acc_total_vector;
 //int32_t gyro_x_cal=0,gyro_y_cal=0,gyro_z_cal=0; // gyro calibration value
 //float angle_pitch, angle_roll, angle_pitch_acc,angle_roll_acc;
 //float angle_pitch_output,angle_roll_output;
+uint8_t maxAccel[33] = {10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74};
+
 
 
 // Stimulation
@@ -127,12 +129,12 @@ volatile int32_t x = 0;
 volatile uint16_t stimPin = 0x0001;
 uint16_t state = 0x0001;
 //uint32_t limitDuration[1024];
-uint16_t limitDuration[33] = {501, 2, 4, 5, 62, 94, 120, 162, 196, 230, 264, 298, 331, 365, 399, 433, 467, 501, 535, 569, 603, 637, 671, 705, 739, 773, 807, 841, 875, 909, 943, 976, 1010};
+uint16_t limitDuration[33] = {501/*1*/, 2, 4, 5, 62, 94, 120, 162, 196, 230, 264, 298, 331, 365, 399, 433, 467, 501, 535, 569, 603, 637, 671, 705, 739, 773, 807, 841, 875, 909, 943, 976, 1010};
 float displayDuration[33] = {30/*0.3*/, 0.5, 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60};
 //uint16_t limitFrequency[10] = {52549, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 uint8_t stimCount = 0;
 uint16_t stimRec = 0;
-uint16_t limitAccel = 15000;
+uint16_t limitAccel[33] = {10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74};
 
 
 // Display
@@ -143,6 +145,7 @@ uint8_t lcdCheck;
 char strInten[10];
 char strDurat[10];
 char strAccel[15];
+
 
 
 int main(void)
@@ -195,7 +198,7 @@ int main(void)
 
     read_MPU_6050_data();
 
-    //if(acc_total_vector > limitAccel) enableStim = 1;
+    if(acc_total_vector > limitAccel[lightNumber[2]]) enableStim = 1;
   }
   /* USER CODE END 3 */
 }
@@ -233,6 +236,7 @@ void oled_display()
   SSD1306_GotoXY(5,2);
   if(modeNumber == 0) SSD1306_Puts("> I:", &Font_11x18, 1);
   else if(modeNumber == 1) SSD1306_Puts("  I:", &Font_11x18, 1);
+  else if(modeNumber == 2) SSD1306_Puts("  I:", &Font_11x18, 1);
   //itoa(rDigipot[lightNumber[0]], strInten, 10); // 10 is decimal
   gcvt(rDisplay[lightNumber[0]], 3, strInten);
   SSD1306_Puts(strInten, &Font_11x18, 1);
@@ -242,6 +246,7 @@ void oled_display()
   SSD1306_GotoXY(5,22);
   if(modeNumber == 0) SSD1306_Puts(" PW:", &Font_11x18, 1);
   else if(modeNumber == 1) SSD1306_Puts(">PW:", &Font_11x18, 1);
+  else if(modeNumber == 2) SSD1306_Puts(" PW:", &Font_11x18, 1); 
   //itoa(limitDuration[lightNumber[1]], strDurat, 10); // 10 is decimal
   gcvt(displayDuration[lightNumber[1]], 3, strDurat);
   SSD1306_Puts(strDurat, &Font_11x18, 1);
@@ -249,9 +254,11 @@ void oled_display()
 
   // Acceleration display
   SSD1306_GotoXY(5,42);
-  SSD1306_Puts(" A: ", &Font_11x18, 1);
+  if(modeNumber == 0) SSD1306_Puts("  A:", &Font_11x18, 1);
+  else if(modeNumber == 1) SSD1306_Puts("  A:", &Font_11x18, 1);
+  else if(modeNumber == 2) SSD1306_Puts("> A:", &Font_11x18, 1);
   //gcvt(acc_total_vector, 3, strAccel);
-  itoa(acc_total_vector/100, strAccel,10); // 10 is decimal
+  itoa(limitAccel[lightNumber[2]], strAccel,10); // 10 is decimal
   SSD1306_Puts(strAccel, &Font_11x18, 1);
   SSD1306_Puts("     ", &Font_11x18, 1);
   SSD1306_UpdateScreen();
@@ -295,6 +302,9 @@ void read_MPU_6050_data()
 	gyro_z = buffer[4]<<8 | buffer[5];
 
   acc_total_vector = sqrt((acc_x*acc_x)+(acc_y*acc_y)+(acc_z*acc_z));
+  acc_total_vector /= 100;
+  acc_total_vector -= 37;
+
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
   HAL_Delay(10);
 }
